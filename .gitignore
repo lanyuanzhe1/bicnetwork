@@ -1,0 +1,29 @@
+# ===== 大文件 / 数据集（不入库）=====
+# 主数据集（~3GB，OneDrive 同步，含 FIG/TXT/PARA/CST）
+dataset/
+Deeplearning/
+# 压缩包
+*.zip
+# 教学视频
+*.mp4
+# CST 工程二进制（若后续有单独存放）
+*.cst
+
+# ===== 训练产物 =====
+Code/runs/
+*.pth
+*.pkl
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# ===== 系统 / IDE =====
+.DS_Store
+.idea/
+.vscode/
+
+# 参考文献（OneDrive 占位文件导致 git add 超时，二进制 PDF/docx 不入库）
+基础文献/
