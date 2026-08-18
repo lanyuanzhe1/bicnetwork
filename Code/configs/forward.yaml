@@ -1,0 +1,21 @@
+# 前向网络训练配置（参数 → 谱）
+
+data:
+  npz_path: data/processed/data.npz   # 相对 Code/ 目录
+
+model:
+  in_dim: 6
+  out_dim: 1101
+  width: 512
+  n_blocks: 3
+
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 50              # early stopping（验证集）
+
+output:
+  runs_dir: runs

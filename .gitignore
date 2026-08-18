@@ -27,3 +27,6 @@ __pycache__/
 
 # 参考文献（OneDrive 占位文件导致 git add 超时，二进制 PDF/docx 不入库）
 基础文献/
+
+# Claude Code 会话产物（worktree 等）
+.claude/
