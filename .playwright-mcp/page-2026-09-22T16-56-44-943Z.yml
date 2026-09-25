@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - link "Skip to content" [ref=e5] [cursor=pointer]:
+        - /url: "#skip"
+      - generic [ref=e6]:
+        - link [ref=e8] [cursor=pointer]:
+          - /url: /
+          - button [ref=e9]:
+            - img "OpenRouter" [ref=e12]
+        - button "Search" [ref=e15] [cursor=pointer]:
+          - generic [ref=e20]:
+            - generic [ref=e21]: ⌘
+            - generic [ref=e22]: K
+        - generic [ref=e23]:
+          - generic [ref=e25]:
+            - link [ref=e26] [cursor=pointer]:
+              - /url: /models
+              - button "Models" [ref=e27]
+            - link [ref=e28] [cursor=pointer]:
+              - /url: /benchmarks
+              - button "Benchmarks" [ref=e29]
+            - link [ref=e31] [cursor=pointer]:
+              - /url: /chat
+              - button "Chat" [ref=e32]
+            - link [ref=e33] [cursor=pointer]:
+              - /url: /rankings
+              - button "Rankings" [ref=e34]
+            - link [ref=e35] [cursor=pointer]:
+              - /url: /apps
+              - button "Apps" [ref=e36]
+            - link [ref=e37] [cursor=pointer]:
+              - /url: /ori
+              - button "Ori" [ref=e38]
+            - link [ref=e39] [cursor=pointer]:
+              - /url: /pricing
+              - button "Pricing" [ref=e40]
+            - link [ref=e41] [cursor=pointer]:
+              - /url: /docs/quickstart
+              - button "Docs" [ref=e42]
+          - button "Sign Up" [ref=e45] [cursor=pointer]
+  - main [ref=e46]
+  - alert [ref=e50]
+  - generic:
+    - region "Notifications"

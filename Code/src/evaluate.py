@@ -150,13 +150,15 @@ def main():
     ap.add_argument("--forward-run", default=None)
     ap.add_argument("--cvae-run", default=None)
     ap.add_argument("--k", type=int, default=K_CANDIDATES)
+    ap.add_argument("--seed", type=int, default=42,
+                    help="随机种子：控制 cVAE 采样与示例选取；换种子可得到新一组评估样本")
     args = ap.parse_args()
 
     forward_run = args.forward_run or latest_run("forward_*")
     cvae_run = args.cvae_run or latest_run("cvae_*")
     print(f"前向运行: {forward_run}\n逆向运行: {cvae_run}")
 
-    set_seed(42)
+    set_seed(args.seed)
     device = get_device()
     data = load_npz("data/processed/data.npz")
     freq = data["freq_grid"]
@@ -181,11 +183,12 @@ def main():
     run_dir = os.path.join(CODE_DIR, "runs", f"eval_{datetime.now():%Y%m%d_%H%M%S}")
     os.makedirs(run_dir, exist_ok=True)
     with open(os.path.join(run_dir, "metrics.json"), "w", encoding="utf-8") as f:
-        json.dump({"forward_run": forward_run, "cvae_run": cvae_run,
+        json.dump({"forward_run": forward_run, "cvae_run": cvae_run, "seed": args.seed,
                    "forward": fwd_metrics, "inverse": inv_metrics}, f, indent=2, ensure_ascii=False)
 
     plot_examples(freq, Y, P, os.path.join(run_dir, "forward_examples.png"),
-                  "Forward: ground truth vs predicted spectra (4 random test samples)")
+                  "Forward: ground truth vs predicted spectra (4 random test samples)",
+                  seed=args.seed)
 
     p_min, p_max = data["param_min"], data["param_max"]
     extra = {}
@@ -194,7 +197,7 @@ def main():
         extra[i] = f"best-of-{args.k} spec MSE={best_errs[i]:.2e} | params={np.round(pr, 1).tolist()}"
     plot_examples(freq, Y, best_specs, os.path.join(run_dir, "inverse_examples.png"),
                   f"Inverse: target vs best-of-{args.k} reconstructed spectra (4 random test samples)",
-                  extra_texts=extra)
+                  extra_texts=extra, seed=args.seed)
 
     print(f"产物在 {run_dir}")
 

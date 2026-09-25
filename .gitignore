@@ -11,8 +11,10 @@ Deeplearning/
 
 # ===== 训练产物 =====
 Code/runs/
+Code/data/          # src/data.py 生成的数据集缓存（可再生成）
 *.pth
 *.pkl
+*.npz
 
 # ===== Python =====
 __pycache__/
@@ -30,3 +32,4 @@ __pycache__/
 
 # Claude Code 会话产物（worktree 等）
 .claude/
+周期分类数据集.z

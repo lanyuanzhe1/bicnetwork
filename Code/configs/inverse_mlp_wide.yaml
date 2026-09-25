@@ -1,0 +1,23 @@
+# 逆向网络基线 3/4：宽残差 MLP（容量对照）
+# 整条 1101 点光谱 → 6 个归一化参数
+
+data:
+  npz_path: data/processed/data.npz
+
+model:
+  name: mlp
+  in_dim: 1101
+  out_dim: 6
+  width: 1024
+  n_blocks: 4
+
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 50
+
+output:
+  runs_dir: runs

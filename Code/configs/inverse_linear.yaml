@@ -1,0 +1,21 @@
+# 逆向网络基线 1/4：单层线性（容量下界参照）
+# 整条 1101 点光谱 → 6 个归一化参数
+
+data:
+  npz_path: data/processed/data.npz
+
+model:
+  name: linear
+  in_dim: 1101
+  out_dim: 6
+
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 50
+
+output:
+  runs_dir: runs
