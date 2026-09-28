@@ -3,10 +3,11 @@
 用法（在 Code/ 目录下）：
     python src/train_forward.py [--config configs/forward.yaml]
 
-产物写入 runs/forward_<时间戳>/：best.pth、losses.csv、loss_curve.png、config.yaml
+产物写入配置指定的 runs 目录：best.pth、losses.csv、loss_curve.png、metrics.json、config.yaml
 """
 
 import argparse
+import json
 import os
 
 import matplotlib
@@ -22,11 +23,12 @@ from common import get_device, load_config, load_npz, make_run_dir, set_seed
 from forward import ForwardMLP
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default=os.path.join(os.path.dirname(__file__), "..", "configs", "forward.yaml"))
-    args = ap.parse_args()
-    cfg = load_config(args.config)
+def main(config_path=None):
+    if config_path is None:
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--config", default=os.path.join(os.path.dirname(__file__), "..", "configs", "forward.yaml"))
+        config_path = ap.parse_args().config
+    cfg = load_config(config_path)
 
     set_seed(cfg["train"]["seed"])
     device = get_device()
@@ -37,9 +39,11 @@ def main():
     Y = torch.from_numpy(data["spectra"])
     train_ds = TensorDataset(X[data["idx_train"]], Y[data["idx_train"]])
     val_ds = TensorDataset(X[data["idx_val"]], Y[data["idx_val"]])
+    test_ds = TensorDataset(X[data["idx_test"]], Y[data["idx_test"]])
     train_loader = DataLoader(train_ds, batch_size=cfg["train"]["batch_size"], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=cfg["train"]["batch_size"])
-    print(f"train={len(train_ds)}, val={len(val_ds)}")
+    test_loader = DataLoader(test_ds, batch_size=cfg["train"]["batch_size"])
+    print(f"train={len(train_ds)}, val={len(val_ds)}, test={len(test_ds)}")
 
     model = ForwardMLP(**cfg["model"]).to(device)
     criterion = nn.MSELoss()
@@ -48,7 +52,7 @@ def main():
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=cfg["train"]["max_epochs"])
 
-    run_dir = make_run_dir(cfg["output"]["runs_dir"], "forward", args.config)
+    run_dir = make_run_dir(cfg["output"]["runs_dir"], "forward", config_path)
     print(f"运行目录: {run_dir}")
 
     best_val = float("inf")
@@ -103,7 +107,20 @@ def main():
     plt.savefig(os.path.join(run_dir, "loss_curve.png"))
     plt.close()
 
-    print(f"完成。最优验证损失 {best_val:.6f}，产物在 {run_dir}")
+    model.load_state_dict(torch.load(os.path.join(run_dir, "best.pth"), map_location=device))
+    model.eval()
+    test_mse = 0.0
+    with torch.no_grad():
+        for xb, yb in test_loader:
+            xb, yb = xb.to(device), yb.to(device)
+            test_mse += criterion(model(xb), yb).item() * len(xb)
+    test_mse /= len(test_ds)
+    metrics = {"best_val_mse": best_val, "test_spec_mse": test_mse,
+               "n_train": len(train_ds), "n_val": len(val_ds), "n_test": len(test_ds)}
+    with open(os.path.join(run_dir, "metrics.json"), "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2, ensure_ascii=False)
+
+    print(f"完成。最优验证 MSE {best_val:.6f}，测试集光谱 MSE {test_mse:.6f}，产物在 {run_dir}")
 
 
 if __name__ == "__main__":

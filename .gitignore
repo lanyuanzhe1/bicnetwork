@@ -8,7 +8,7 @@ Deeplearning/
 *.mp4
 # CST 工程二进制（若后续有单独存放）
 *.cst
-
+周期分类数据集/
 # ===== 训练产物 =====
 Code/runs/
 Code/data/          # src/data.py 生成的数据集缓存（可再生成）

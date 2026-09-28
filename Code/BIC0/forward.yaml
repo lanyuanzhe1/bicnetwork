@@ -1,0 +1,17 @@
+# BIC-0 前向基线：六列参数（Y=0）→ 1101 点光谱
+data:
+  npz_path: data/processed/bic0.npz
+model:
+  in_dim: 6
+  out_dim: 1101
+  width: 512
+  n_blocks: 3
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 50
+output:
+  runs_dir: runs/bic0

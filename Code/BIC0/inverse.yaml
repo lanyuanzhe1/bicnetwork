@@ -1,0 +1,19 @@
+# BIC-0 逆向 MLP：完整光谱 → 六列参数；训练时 Y 标签为 0。
+data:
+  npz_path: data/processed/bic0.npz
+model:
+  in_dim: 1101
+  out_dim: 6
+  width: 512
+  n_blocks: 3
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.0001
+  weight_decay: 0.0001
+  patience: 50
+evaluation:
+  forward_run: runs/bic0/forward_20260928_113847
+output:
+  runs_dir: runs/bic0

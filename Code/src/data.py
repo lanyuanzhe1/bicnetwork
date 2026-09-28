@@ -1,12 +1,12 @@
-"""数据预处理：读取 PARA/TXT 原始文件 → 归一化 → 8:1:1 划分 → data.npz
+"""通用数据预处理：读取 PARA/TXT 原始文件 → 归一化 → 8:1:1 划分 → npz
 
 用法（在 Code/ 目录下）：
     python src/data.py                      # 默认数据集在 ../dataset
     python src/data.py --dataset-dir /path/to/dataset
 
 设计依据：docs/superpowers/specs/2026-08-18-bic-forward-inverse-pipeline-design.md §3
-- 跳过缺失谱文件的 id（2532、2645）
-- 参数 min-max 归一化到 [0,1]；谱不做缩放（原生 [0,1]）
+- 默认全量模式跳过缺失谱文件的 id（2532、2645）
+- 变化的参数列 min-max 归一化到 [0,1]；常量列保持原值；谱不做缩放
 - 随机 8:1:1，固定种子 42，划分索引随 npz 固化
 """
 
@@ -42,8 +42,9 @@ def read_with_retry(path: str, attempts: int = 6, **loadtxt_kwargs) -> np.ndarra
             time.sleep(wait)
 
 
-def load_dataset(dataset_dir: str):
-    """读取全部样本，返回 ids, params_raw (N,6), spectra (N,1101), freq_grid (1101,)"""
+def load_dataset(dataset_dir: str, first_id: int = 1, last_id: int = 3840,
+                 strict: bool = False):
+    """读取指定 ID 范围，返回 ids, params_raw (N,6), spectra (N,1101), freq_grid (1101,)"""
     para_dir = os.path.join(dataset_dir, "PARA")
     txt_dir = os.path.join(dataset_dir, "TXT")
 
@@ -51,23 +52,28 @@ def load_dataset(dataset_dir: str):
     freq_grid = None
     skipped = []
 
-    for i in range(1, 3841):
+    for i in range(first_id, last_id + 1):
         para_path = os.path.join(para_dir, f"para{i}.txt")
         spec_path = os.path.join(txt_dir, f"{i}.txt")
         if not (os.path.exists(para_path) and os.path.exists(spec_path)):
+            if strict:
+                raise FileNotFoundError(f"样本 {i} 缺少 PARA 或 TXT: {para_path}, {spec_path}")
             skipped.append(i)
             continue
 
         p = np.atleast_1d(read_with_retry(para_path))
-        assert p.shape == (6,), f"para{i}.txt 形状异常: {p.shape}"
+        if p.shape != (6,) or not np.isfinite(p).all():
+            raise ValueError(f"para{i}.txt 参数形状或数值异常: {p.shape}")
 
         s = read_with_retry(spec_path, skiprows=SKIP_ROWS)
-        assert s.shape == (N_FREQ, 2), f"{i}.txt 形状异常: {s.shape}"
+        if s.shape != (N_FREQ, 2) or not np.isfinite(s).all():
+            raise ValueError(f"{i}.txt 光谱形状或数值异常: {s.shape}")
         if freq_grid is None:
             freq_grid = s[:, 0]
         else:
             # 容忍文件打印精度造成的末位差异
-            assert np.allclose(s[:, 0], freq_grid, rtol=1e-4, atol=1e-6), f"{i}.txt 频率网格不一致"
+            if not np.allclose(s[:, 0], freq_grid, rtol=1e-4, atol=1e-6):
+                raise ValueError(f"{i}.txt 频率网格不一致")
 
         ids.append(i)
         params.append(p)
@@ -77,8 +83,20 @@ def load_dataset(dataset_dir: str):
 
     if skipped:
         print(f"跳过缺失文件的 id: {skipped}")
+    if freq_grid is None:
+        raise ValueError(f"{dataset_dir} 中没有可用的 PARA/TXT 配对")
     return (np.array(ids), np.array(params, dtype=np.float32),
             np.array(spectra, dtype=np.float32), freq_grid.astype(np.float32))
+
+
+def normalize_params(params_raw: np.ndarray):
+    """归一化变化的参数列；常量列保持原值。"""
+    p_min = params_raw.min(axis=0)
+    p_max = params_raw.max(axis=0)
+    varying = p_max > p_min
+    params_norm = params_raw.copy()
+    params_norm[:, varying] = (params_raw[:, varying] - p_min[varying]) / (p_max[varying] - p_min[varying])
+    return params_norm.astype(np.float32), p_min, p_max
 
 
 def main():
@@ -93,10 +111,7 @@ def main():
     print(f"谱值域: [{spectra.min():.4f}, {spectra.max():.4f}]")
     print(f"频率范围: [{freq_grid[0]:.4f}, {freq_grid[-1]:.4f}] THz, {len(freq_grid)} 点")
 
-    # 参数 min-max 归一化
-    p_min = params_raw.min(axis=0)
-    p_max = params_raw.max(axis=0)
-    params_norm = ((params_raw - p_min) / (p_max - p_min)).astype(np.float32)
+    params_norm, p_min, p_max = normalize_params(params_raw)
     print(f"参数网格水平: {[sorted(set(params_raw[:, j].tolist())) for j in range(6)]}")
 
     # 随机 8:1:1 划分，固定种子

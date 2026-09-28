@@ -3,10 +3,7 @@
 用法（在 Code/ 目录下）：
     python src/train_inverse.py --config configs/inverse_mlp.yaml
 
-与 cVAE 的差别：
-- 无隐变量、无 KL、无 best-of-K 采样 —— 给定目标谱直接输出一组参数
-- 训练损失 = 参数 MSE（归一化空间）
-- 评估额外算**闭环谱误差**：预测参数 → 前向模型 → 谱，与目标谱比对
+
 
 产物写入 runs/inverse_<时间戳>/：best.pth、losses.csv、loss_curve.png、metrics.json、config.yaml
 """
