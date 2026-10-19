@@ -1,0 +1,21 @@
+# 与 BIC1 直接逆向 5e-5 基线使用相同数据、架构、seed 和学习率。
+data:
+  npz_path: data/processed/bic1.npz
+model:
+  in_dim: 1101
+  out_dim: 6
+  width: 512
+  n_blocks: 3
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.00005
+  weight_decay: 0.0001
+loss:
+  param_weight: 1.0
+  spec_weight: 1.0
+evaluation:
+  forward_run: runs/bic1/forward_20260929_101011
+output:
+  runs_dir: runs/bic1/tandem

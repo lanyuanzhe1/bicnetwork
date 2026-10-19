@@ -17,7 +17,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from common import get_device, load_config, load_npz, make_run_dir, set_seed
+from common import get_device, load_config, load_npz, make_run_dir, set_seed, write_run_readme
 from cvae import CVAE, cvae_loss
 
 
@@ -53,7 +53,6 @@ def main():
     beta_max = cfg["train"]["beta_max"]
     free_bits = cfg["train"].get("free_bits", 0.0)
     best_val = float("inf")
-    patience_left = cfg["train"]["patience"]
     history = []
 
     for epoch in range(1, cfg["train"]["max_epochs"] + 1):
@@ -92,15 +91,9 @@ def main():
                   f"(recon {row['train_recon']:.5f}, kl {row['train_kl']:.3f}) | "
                   f"val {row['val_loss']:.5f}")
 
-        if row["val_loss"] < best_val - 1e-7:
+        if row["val_loss"] < best_val:
             best_val = row["val_loss"]
-            patience_left = cfg["train"]["patience"]
             torch.save(model.state_dict(), os.path.join(run_dir, "best.pth"))
-        else:
-            patience_left -= 1
-            if patience_left <= 0:
-                print(f"Early stopping @ epoch {epoch}, best val {best_val:.6f}")
-                break
 
     pd.DataFrame(history).to_csv(os.path.join(run_dir, "losses.csv"), index=False)
 
@@ -115,6 +108,7 @@ def main():
     plt.tight_layout()
     plt.savefig(os.path.join(run_dir, "loss_curve.png"))
     plt.close()
+    write_run_readme(run_dir)
 
     print(f"完成。最优验证损失 {best_val:.6f}，产物在 {run_dir}")
 

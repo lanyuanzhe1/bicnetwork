@@ -10,9 +10,8 @@ train:
   seed: 42
   batch_size: 32
   max_epochs: 500
-  lr: 0.0001
+  lr: 0.000005
   weight_decay: 0.0001
-  patience: 50
 evaluation:
   forward_run: runs/bic0/forward_20260928_113847
 output:

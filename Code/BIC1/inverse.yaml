@@ -1,0 +1,18 @@
+# BIC1 逆向 MLP：完整光谱 → 六列参数，Y 与其他参数一样预测。
+data:
+  npz_path: data/processed/bic1.npz
+model:
+  in_dim: 1101
+  out_dim: 6
+  width: 512
+  n_blocks: 3
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.00001
+  weight_decay: 0.0001
+evaluation:
+  forward_run: null
+output:
+  runs_dir: runs/bic1

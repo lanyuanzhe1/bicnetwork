@@ -3,10 +3,12 @@
 从 `Code/` 目录运行：
 
 ```bash
-/opt/homebrew/Caskroom/miniconda/base/bin/python BIC0/data.py
-/opt/homebrew/Caskroom/miniconda/base/bin/python BIC0/train_forward.py
-/opt/homebrew/Caskroom/miniconda/base/bin/python BIC0/train_inverse.py
+/opt/homebrew/Caskroom/miniconda/base/envs/bic/bin/python BIC0/data.py
+/opt/homebrew/Caskroom/miniconda/base/envs/bic/bin/python BIC0/train_forward.py
+/opt/homebrew/Caskroom/miniconda/base/envs/bic/bin/python BIC0/train_inverse.py
 ```
+
+前向和逆向训练都会跑满配置中的 `max_epochs`（当前均为 500），每轮根据验证损失更新 `best.pth`，结束后使用最佳权重评估，不再提前停止。
 
 `data.py` 读取 1–768 号 PARA/TXT，保留 1101 点光谱和六列结构参数，确认 Y 全为 0 后原样保留；其他五列按各自范围归一化。输出沿用 `Code/data/processed/bic0.npz`，包括固定种子 42 的 train/val/test 索引。
 

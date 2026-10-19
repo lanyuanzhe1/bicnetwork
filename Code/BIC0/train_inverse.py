@@ -16,7 +16,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from common import get_device, load_config, load_npz, make_run_dir, set_seed
+from common import get_device, load_config, load_npz, make_run_dir, set_seed, write_run_readme
 from forward import ForwardMLP
 from inverse import InverseMLP
 
@@ -86,7 +86,7 @@ def main():
     run_dir = make_run_dir(cfg["output"]["runs_dir"], "inverse_mlp", args.config)
     print(f"设备: {device} | train={len(train)} val={len(val)} | 输出: {run_dir}")
 
-    best, patience_left, history = float("inf"), cfg["train"]["patience"], []
+    best, history = float("inf"), []
     for epoch in range(1, cfg["train"]["max_epochs"] + 1):
         model.train()
         total = 0.0
@@ -109,14 +109,9 @@ def main():
         history.append((epoch, train_loss, val_loss))
         if epoch == 1 or epoch % 10 == 0:
             print(f"Epoch {epoch:4d} | train {train_loss:.6f} | val {val_loss:.6f}")
-        if val_loss < best - 1e-7:
-            best, patience_left = val_loss, cfg["train"]["patience"]
+        if val_loss < best:
+            best = val_loss
             torch.save(model.state_dict(), os.path.join(run_dir, "best.pth"))
-        else:
-            patience_left -= 1
-            if patience_left <= 0:
-                print(f"Early stopping @ epoch {epoch}")
-                break
 
     with open(os.path.join(run_dir, "losses.csv"), "w", newline="", encoding="utf-8") as out:
         writer = csv.writer(out)
@@ -140,6 +135,7 @@ def main():
     metrics["n_test"] = len(idx)
     with open(os.path.join(run_dir, "metrics.json"), "w", encoding="utf-8") as out:
         json.dump(metrics, out, indent=2, ensure_ascii=False)
+    write_run_readme(run_dir)
     print("测试诊断: " + json.dumps(metrics, ensure_ascii=False))
     print(f"完成。产物在 {run_dir}")
 

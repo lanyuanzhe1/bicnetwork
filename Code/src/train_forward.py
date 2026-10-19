@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from common import get_device, load_config, load_npz, make_run_dir, set_seed
+from common import get_device, load_config, load_npz, make_run_dir, set_seed, write_run_readme
 from forward import ForwardMLP
 
 
@@ -56,7 +56,6 @@ def main(config_path=None):
     print(f"运行目录: {run_dir}")
 
     best_val = float("inf")
-    patience_left = cfg["train"]["patience"]
     history = []
 
     for epoch in range(1, cfg["train"]["max_epochs"] + 1):
@@ -84,15 +83,9 @@ def main(config_path=None):
         if epoch % 10 == 0 or epoch == 1:
             print(f"Epoch {epoch:4d} | train {train_loss:.6f} | val {val_loss:.6f}")
 
-        if val_loss < best_val - 1e-7:
+        if val_loss < best_val:
             best_val = val_loss
-            patience_left = cfg["train"]["patience"]
             torch.save(model.state_dict(), os.path.join(run_dir, "best.pth"))
-        else:
-            patience_left -= 1
-            if patience_left <= 0:
-                print(f"Early stopping @ epoch {epoch}, best val {best_val:.6f}")
-                break
 
     pd.DataFrame(history).to_csv(os.path.join(run_dir, "losses.csv"), index=False)
 
@@ -119,6 +112,7 @@ def main(config_path=None):
                "n_train": len(train_ds), "n_val": len(val_ds), "n_test": len(test_ds)}
     with open(os.path.join(run_dir, "metrics.json"), "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
+    write_run_readme(run_dir)
 
     print(f"完成。最优验证 MSE {best_val:.6f}，测试集光谱 MSE {test_mse:.6f}，产物在 {run_dir}")
 

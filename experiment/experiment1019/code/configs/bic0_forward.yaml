@@ -1,0 +1,15 @@
+data:
+  npz_path: data/processed/bic0.npz
+model:
+  in_dim: 6
+  out_dim: 1101
+  width: 512
+  n_blocks: 3
+train:
+  seed: 42
+  batch_size: 32
+  max_epochs: 500
+  lr: 0.001
+  weight_decay: 0.0001
+output:
+  runs_dir: runs/bic0

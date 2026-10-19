@@ -20,7 +20,6 @@ train:
   max_epochs: 500
   lr: 0.001
   weight_decay: 0.0001
-  patience: 50
 
 output:
   runs_dir: runs

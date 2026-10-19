@@ -1,0 +1,7 @@
+{
+  "bic0_forward": "Code/runs/bic0/forward_20261019_000911",
+  "bic0_inverse": "Code/runs/bic0/inverse_mlp_20261019_001149",
+  "bic1_forward": "Code/runs/bic1/forward_20261019_122946",
+  "bic1_inverse": "Code/runs/bic1/inverse_mlp_20261019_123524",
+  "bic1_tandem": "Code/runs/bic1/tandem/tandem_20261019_124110"
+}

@@ -22,7 +22,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from common import CODE_DIR, get_device, load_config, load_npz, make_run_dir, set_seed
+from common import CODE_DIR, get_device, load_config, load_npz, make_run_dir, set_seed, write_run_readme
 from forward import ForwardMLP
 from inverse import build_model
 
@@ -128,7 +128,7 @@ def main():
     run_dir = make_run_dir(cfg["output"]["runs_dir"], f"inverse_{tag}", args.config)
     print(f"运行目录: {run_dir}")
 
-    best_val, patience_left, history = float("inf"), cfg["train"]["patience"], []
+    best_val, history = float("inf"), []
     for epoch in range(1, cfg["train"]["max_epochs"] + 1):
         model.train()
         train_loss = 0.0
@@ -154,14 +154,9 @@ def main():
         if epoch % 10 == 0 or epoch == 1:
             print(f"Epoch {epoch:4d} | train {train_loss:.6f} | val {val_loss:.6f}")
 
-        if val_loss < best_val - 1e-7:
-            best_val, patience_left = val_loss, cfg["train"]["patience"]
+        if val_loss < best_val:
+            best_val = val_loss
             torch.save(model.state_dict(), os.path.join(run_dir, "best.pth"))
-        else:
-            patience_left -= 1
-            if patience_left <= 0:
-                print(f"Early stopping @ epoch {epoch}, best val {best_val:.6f}")
-                break
 
     pd.DataFrame(history).to_csv(os.path.join(run_dir, "losses.csv"), index=False)
     plt.figure(figsize=(6, 4), dpi=150)
@@ -181,6 +176,7 @@ def main():
     print("测试集: " + json.dumps(metrics, indent=2, ensure_ascii=False))
     with open(os.path.join(run_dir, "metrics.json"), "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
+    write_run_readme(run_dir)
 
     # 示例图：目标谱 vs 闭环重构谱
     Yt = Y[idx]
